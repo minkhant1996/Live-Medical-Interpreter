@@ -1,0 +1,149 @@
+# =============================================================================
+# MedInterpreter — CI/CD Pipeline
+# =============================================================================
+# Triggers on push to main branch.
+# 1. Runs tests (server + client)
+# 2. Builds Docker image
+# 3. Pushes to Google Artifact Registry
+# 4. Deploys to Cloud Run
+#
+# Required GitHub Secrets:
+#   GCP_PROJECT_ID       — Google Cloud project ID
+#   GCP_SA_KEY           — Service account JSON key (with Cloud Run, Artifact Registry, Secret Manager permissions)
+#   GCP_REGION           — e.g. us-central1 (optional, defaults to us-central1)
+# =============================================================================
+
+name: Deploy to Cloud Run
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: # Allow manual trigger
+
+env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  REGION: ${{ secrets.GCP_REGION || 'us-central1' }}
+  SERVICE_NAME: med-interpreter
+  REPO_NAME: med-interpreter-repo
+
+jobs:
+  # ------ Job 1: Test ------
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install workspace dependencies
+        run: |
+          npm ci -w server
+          npm ci -w client
+
+      - name: Type-check server
+        run: npx tsc --noEmit -p server/tsconfig.json
+
+      - name: Type-check client
+        run: npx tsc --noEmit -p client/tsconfig.json
+
+      - name: Run server tests
+        run: npm test -w server
+
+      - name: Run client tests
+        run: npm test -w client
+
+  # ------ Job 2: Build & Deploy ------
+  deploy:
+    name: Build & Deploy
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
+
+      - name: Create Artifact Registry repo (if needed)
+        run: |
+          gcloud artifacts repositories describe ${{ env.REPO_NAME }} \
+            --location=${{ env.REGION }} --format="value(name)" 2>/dev/null || \
+          gcloud artifacts repositories create ${{ env.REPO_NAME }} \
+            --repository-format=docker \
+            --location=${{ env.REGION }} \
+            --description="MedInterpreter container images"
+
+      - name: Build and push Docker image
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          IMAGE_URI="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.SERVICE_NAME }}:${IMAGE_TAG}"
+          docker build -t "$IMAGE_URI" .
+          docker push "$IMAGE_URI"
+          echo "IMAGE_URI=$IMAGE_URI" >> $GITHUB_ENV
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy ${{ env.SERVICE_NAME }} \
+            --image ${{ env.IMAGE_URI }} \
+            --platform managed \
+            --region ${{ env.REGION }} \
+            --allow-unauthenticated \
+            --port 8080 \
+            --memory 1Gi \
+            --cpu 2 \
+            --min-instances 1 \
+            --max-instances 10 \
+            --timeout 300 \
+            --session-affinity \
+            --set-env-vars "NODE_ENV=production,USE_VERTEX_AI=true,GCP_PROJECT_ID=${{ env.PROJECT_ID }},GCP_REGION=${{ env.REGION }}" \
+            --quiet
+
+      - name: Show deployment URL
+        run: |
+          URL=$(gcloud run services describe ${{ env.SERVICE_NAME }} \
+            --region ${{ env.REGION }} \
+            --format="value(status.url)")
+          echo "## Deployed to Cloud Run" >> $GITHUB_STEP_SUMMARY
+          echo "**URL:** $URL" >> $GITHUB_STEP_SUMMARY
+          echo "**Image:** ${{ env.IMAGE_URI }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+
+      - name: Health check
+        run: |
+          URL=$(gcloud run services describe ${{ env.SERVICE_NAME }} \
+            --region ${{ env.REGION }} \
+            --format="value(status.url)")
+          echo "Checking health at $URL/api/health..."
+          for i in 1 2 3 4 5; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$URL/api/health" || true)
+            if [ "$STATUS" = "200" ]; then
+              echo "Health check passed!"
+              exit 0
+            fi
+            echo "Attempt $i: status $STATUS, retrying in 5s..."
+            sleep 5
+          done
+          echo "::warning::Health check did not return 200 after 5 attempts"

@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <!-- Hospital building -->
+  <rect x="20" y="30" width="60" height="55" rx="4" fill="#0d9488" />
+
+  <!-- Roof -->
+  <path d="M15 32 L50 10 L85 32" stroke="#0d9488" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+
+  <!-- Medical cross -->
+  <rect x="42" y="38" width="16" height="40" rx="2" fill="white" />
+  <rect x="30" y="50" width="40" height="16" rx="2" fill="white" />
+
+  <!-- Door -->
+  <rect x="40" y="70" width="20" height="15" rx="2" fill="#134e4a" />
+
+  <!-- Windows -->
+  <rect x="25" y="40" width="10" height="10" rx="1" fill="#99f6e4" />
+  <rect x="65" y="40" width="10" height="10" rx="1" fill="#99f6e4" />
+</svg>

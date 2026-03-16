@@ -1,0 +1,131 @@
+# ========== Dependencies ==========
+node_modules/
+.pnp/
+.pnp.js
+
+# ========== Build Output ==========
+dist/
+build/
+.next/
+out/
+*.tsbuildinfo
+
+# ========== Environment & Secrets ==========
+.env
+.env.*
+.env.local
+.env.development
+.env.production
+.env.staging
+!.env.example
+
+# ========== Credentials & Keys ==========
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+*credentials*.json
+*service-account*.json
+*-key.json
+*-keys.json
+*secret*.json
+!*secret*.example.json
+firebase-adminsdk*.json
+gcp-*.json
+google-*.json
+serviceAccountKey.json
+
+# ========== Claude Code ==========
+.claude/
+.claude-*
+
+# ========== IDE & Editor ==========
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+
+# ========== OS Files ==========
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ========== Logs ==========
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+logs/
+
+# ========== Testing ==========
+coverage/
+.nyc_output/
+*.lcov
+
+# ========== Cache ==========
+.cache/
+.parcel-cache/
+.npm/
+.eslintcache
+.stylelintcache
+*.tgz
+
+# ========== Temporary Files ==========
+tmp/
+temp/
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# ========== Firebase ==========
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+pubsub-debug.log
+*.rules.backup
+
+# ========== Docker ==========
+.docker/
+
+# ========== Videos & Media ==========
+videos/
+*.mp4
+*.mov
+*.avi
+*.mkv
+*.webm
+*.wmv
+*.m4v
+recordings/
+screenshots/
+
+# ========== Documentation (keep only README) ==========
+docs/
+SECURITY_REVIEW.md
+DESIGN_SYSTEM.md
+TEST_RESULTS.md
+ARCHITECTURE.md
+CHANGELOG.md
+*.audit.md
+*-review.md
+*-report.md
+*-findings.md
+
+# ========== Misc ==========
+*.local
+.turbo/

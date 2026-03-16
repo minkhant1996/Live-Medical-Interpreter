@@ -1,0 +1,27 @@
+{
+  "name": "med-interpreter",
+  "version": "1.0.0",
+  "private": true,
+  "author": "Min Khant Soe — CEO, SoeMindAI, Inc.",
+  "license": "MIT",
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:server": "npm run dev -w server",
+    "dev:client": "npm run dev -w client",
+    "build": "npm run build -w client && npm run build -w server",
+    "start": "npm run start -w server",
+    "docker:build": "docker build -t med-interpreter .",
+    "docker:run": "docker run -p 8080:8080 --env-file .env med-interpreter",
+    "db:seed": "npx tsx server/scripts/seed.ts",
+    "db:seed:clean": "npx tsx server/scripts/seed.ts --clean",
+    "db:seed:dry": "npx tsx server/scripts/seed.ts --dry-run"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0",
+    "typescript": "^5.7.0"
+  }
+}
