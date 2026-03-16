@@ -627,17 +627,6 @@ Live-Interpreter/
 
 ---
 
-## Hallucination Mitigation
-
-See [`docs/hallucination-risks.md`](docs/hallucination-risks.md) for the full catalog. Key measures:
-
-1. **Prompt engineering** — grounding rules, low temperature, structured JSON output
-2. **Clinical Grounding Verification** — second AI model (Gemini 3.1 Flash Lite) cross-references summaries against original transcripts
-3. **Human review** — doctor edits every field before certificate generation
-4. **Output labeling** — disclaimers, `[?]` uncertainty markers, image quality warnings
-
----
-
 ## Disclaimer
 
 This application is a **communication support tool** designed to assist with language barriers in medical settings. It is:
