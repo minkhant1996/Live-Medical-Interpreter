@@ -1,6 +1,6 @@
 # MedInterpreter
 
-Real-time bilingual medical interpreter powered by **Google Gemini Live API** and **Vertex AI**. Bridges language barriers between healthcare providers and patients in clinical settings with live audio translation, medical image analysis, consultation summaries, and medical certificate generation.
+Real-time bilingual medical interpreter powered by **Google Gemini Live API** and **Vertex AI**. Bridges language barriers between healthcare providers and patients in clinical settings with live audio translation, consultation summaries, and medical certificate generation.
 
 **Built by Min Khant Soe, SoeMindAI, Inc.**
 
@@ -12,10 +12,8 @@ Real-time bilingual medical interpreter powered by **Google Gemini Live API** an
 
 | Feature | Description |
 |---|---|
-| **Real-Time Voice Interpretation** | Gemini Live API with native audio — doctor speaks, patient hears translation instantly (and vice versa). Supports barge-in/interruption handling. |
+| **Real-Time Voice Interpretation** | Gemini Live API with native audio - doctor speaks, patient hears translation instantly (and vice versa). Supports barge-in/interruption handling. |
 | **Multi-Language Support** | English, Thai, Burmese, Khmer, Lao, Vietnamese, Chinese |
-| **Medical Image Analysis** | Upload photos (rashes, wounds, X-rays) for AI-powered visual assessment with severity classification |
-| **Prescription Scanner** | Photograph prescription labels — AI reads and explains medication in patient's language |
 | **Consultation Summary** | AI-generated structured summary with Clinical Grounding Verification (two-model anti-hallucination check) |
 | **Medical Certificate** | Generate bilingual PDF medical certificates from consultation data |
 | **Room-Based Sessions** | Doctor creates a room, patient joins with 6-digit code. Real-time WebSocket communication. |
@@ -217,7 +215,7 @@ flowchart LR
 |---|---|
 | **Frontend** | React 19, TypeScript, Vite, Web Audio API |
 | **Backend** | Express, TypeScript, WebSocket (ws) |
-| **AI — Text** | Gemini 2.5 Flash (translate, summarize, certificates, image/Rx analysis) |
+| **AI — Text** | Gemini 2.5 Flash (translate, summarize, certificates) |
 | **AI — Live Audio** | Gemini 2.5 Flash Native Audio (real-time voice interpretation via Live API) |
 | **AI — Verification** | Gemini 3.1 Flash Lite (clinical grounding verification with thinking) |
 | **Speech** | Google Cloud Text-to-Speech |
@@ -523,12 +521,11 @@ Live-Interpreter/
 │   │   │   ├── LoginPage.tsx         # Auth (login / register)
 │   │   │   ├── RoomPage.tsx          # Create / join room
 │   │   │   ├── LanguageSetup.tsx     # Language pair selection
-│   │   │   ├── InterpreterView.tsx   # Main interpreter (audio, text, images)
+│   │   │   ├── InterpreterView.tsx   # Main interpreter (audio, transcript)
 │   │   │   ├── TranscriptPanel.tsx   # Conversation transcript display
 │   │   │   ├── SessionCompleteModal.tsx # Summary → verify → certificate flow
 │   │   │   ├── SummaryView.tsx       # Bilingual summary view
 │   │   │   ├── CertificateView.tsx   # Medical certificate form + preview
-│   │   │   ├── PrescriptionScanner.tsx # Rx photo analysis
 │   │   │   ├── Disclaimer.tsx        # Safety disclaimer modal
 │   │   │   └── LegalPage.tsx         # Terms of use, privacy policy
 │   │   ├── hooks/
@@ -547,7 +544,7 @@ Live-Interpreter/
 ├── server/                           # Express backend
 │   ├── src/
 │   │   ├── index.ts                  # Server entry (Express + HTTP + WS)
-│   │   ├── websocket.ts             # WebSocket handler (rooms, audio, images)
+│   │   ├── websocket.ts             # WebSocket handler (rooms, audio streaming)
 │   │   ├── types.ts                  # Shared TypeScript types
 │   │   ├── services/
 │   │   │   ├── gemini.ts            # Gemini 2.5 Flash (text API + Vertex AI)
@@ -558,7 +555,6 @@ Live-Interpreter/
 │   │   │   ├── auth.ts              # POST /api/auth/login, /register
 │   │   │   ├── rooms.ts            # POST /api/rooms/create, /join
 │   │   │   ├── summary.ts          # POST /api/summary
-│   │   │   ├── prescription.ts     # POST /api/prescription
 │   │   │   ├── certificate.ts      # POST /api/certificate
 │   │   │   └── consultation.ts     # POST /api/consultation/summary, /verify
 │   │   ├── middleware/
@@ -596,12 +592,11 @@ Live-Interpreter/
 | `POST` | `/api/rooms/join` | JWT | Patient joins room by code |
 | `GET` | `/api/rooms/:code` | JWT | Get room details |
 | `POST` | `/api/summary` | JWT | Generate bilingual visit summary |
-| `POST` | `/api/prescription` | JWT | Analyze prescription photo |
 | `POST` | `/api/certificate` | JWT | Generate bilingual medical certificate |
 | `POST` | `/api/consultation/summary` | JWT | Generate structured consultation summary |
 | `POST` | `/api/consultation/verify` | JWT | Clinical grounding verification |
 | `GET` | `/api/health` | No | Health check |
-| `WS` | `/ws/interpret` | JWT (in message) | Real-time audio/text/image communication |
+| `WS` | `/ws/interpret` | JWT (in message) | Real-time audio/text communication |
 
 ---
 
@@ -609,7 +604,7 @@ Live-Interpreter/
 
 | Model | Purpose | Temperature | Output |
 |---|---|---|---|
-| **Gemini 2.5 Flash** | Translation, transcription, summaries, certificates, image/Rx analysis | 0.1–0.2 | Structured JSON |
+| **Gemini 2.5 Flash** | Translation, transcription, summaries, certificates | 0.1-0.2 | Structured JSON |
 | **Gemini 2.5 Flash Native Audio** | Real-time voice interpretation via Live API | Default | Audio + text |
 | **Gemini 3.1 Flash Lite** | Clinical Grounding Verification (anti-hallucination) | 0.1 | Structured JSON |
 
